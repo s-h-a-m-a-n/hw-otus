@@ -2,11 +2,73 @@ package hw02unpackstring
 
 import (
 	"errors"
+	"strings"
 )
 
 var ErrInvalidString = errors.New("invalid string")
 
-func Unpack(_ string) (string, error) {
-	// Place your code here.
-	return "", nil
+var escapes = map[rune]bool{
+	0x0007: true, // `\a` alert or bell
+	0x0008: true, // `\b` backspace
+	0x000C: true, // `\f` form feed
+	0x000D: true, // `\r` carriage return
+	0x0009: true, // `\t` horizontal tab
+	0x000B: true, // `\v` vertical tab
+	0x0027: true, // `\'` single quote  (valid escape only within rune literals)
+	0x0022: true, // `\"` double quote  (valid escape only within string literals)
+}
+
+const (
+	backslash = 0x005c
+	newline   = 0x000A
+)
+
+func Unpack(s string) (string, error) {
+	if s == "" {
+		return "", nil
+	}
+	var b strings.Builder
+	var prev rune
+	var j int
+	for _, ch := range s {
+		number := ch - '0'
+		switch {
+		case escapes[ch]:
+			return "", ErrInvalidString
+		case ch == backslash:
+			j++
+			if j != 2 {
+				j = 1
+				if prev > 0 {
+					b.WriteRune(prev)
+				}
+			}
+			prev = ch
+		case number > 9 || ch == newline:
+			if j > 0 {
+				return "", ErrInvalidString
+			}
+			if prev > 0 {
+				b.WriteRune(prev)
+			}
+			prev = ch
+		default:
+			if prev == 0 {
+				return "", ErrInvalidString
+			}
+			if j == 1 {
+				j, prev = 0, ch
+				continue
+			}
+			b.Grow(int(number))
+			for k := 0; k < int(number); k++ {
+				b.WriteRune(prev)
+			}
+			prev = 0
+		}
+	}
+	if prev > 0 {
+		b.WriteRune(prev)
+	}
+	return b.String(), nil
 }
