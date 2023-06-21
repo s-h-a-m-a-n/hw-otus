@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const topN = 10
+
 var r = regexp.MustCompile(`[!@#$\n.,:	; "]`)
 
 func Top10(s string) []string {
@@ -29,13 +31,15 @@ func Top10(s string) []string {
 	for w := range m {
 		t = append(t, w)
 	}
-	sort.Strings(t)
 	sort.SliceStable(t, func(i, j int) bool {
+		if m[t[i]] == m[t[j]] {
+			return t[i] < t[j]
+		}
 		return m[t[i]] > m[t[j]]
 	})
 	l := len(t)
-	if l > 10 {
-		l = 10
+	if l > topN {
+		l = topN
 	}
 	return t[:l]
 }
