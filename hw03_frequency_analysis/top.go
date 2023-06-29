@@ -1,9 +1,11 @@
 package hw03frequencyanalysis
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 )
 
 const topN = 10
@@ -16,6 +18,12 @@ func Top10(s string) []string {
 	}
 	s = strings.ToLower(s)
 	res := r.Split(s, -1)
+
+	f := func(c rune) bool {
+		return unicode.IsSpace(c) || unicode.IsPunct(c)
+	}
+	fmt.Printf("Fields are: %q", strings.FieldsFunc(s, f))
+
 	m := map[string]int{}
 	for _, w := range res {
 		switch w {
